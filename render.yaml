@@ -25,13 +25,15 @@ services:
     env: static
     plan: free
     region: ohio
-    buildCommand: cd frontend && npm install && CI=false npm run build
+    buildCommand: cd frontend && npm ci && CI=false npm run build
     staticPublishPath: frontend/build
     routes:
       - type: rewrite
         src: /*
         dest: /index.html
     envVars:
+      - key: NODE_VERSION
+        value: 20.10.0
       - key: REACT_APP_API_URL
         sync: false
       - key: REACT_APP_GOOGLE_CLIENT_ID
