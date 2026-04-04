@@ -25,7 +25,7 @@ services:
     env: static
     plan: free
     region: ohio
-    buildCommand: cd frontend && npm ci && CI=false npm run build
+    buildCommand: cd frontend && npm install && chmod +x node_modules/.bin/react-scripts && CI=false npm run build
     staticPublishPath: frontend/build
     routes:
       - type: rewrite
