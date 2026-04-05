@@ -44,7 +44,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
     setUploading(true);
     try {
-      await axios.post(`${API_BASE_URL}/api/resumes/upload`, formData);
+      await axios.post("https://y-gold-two-66.vercel.app/upload", formData);
       fetchMyResume();
       alert('Resume uploaded successfully!');
     } catch (err) {
