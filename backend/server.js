@@ -58,5 +58,8 @@ if (process.env.NODE_ENV !== 'production' || process.env.RENDER || !process.env.
     console.log(`🚀 Server running on port ${PORT}`);
   });
 }
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
+});
 
 module.exports = app;
