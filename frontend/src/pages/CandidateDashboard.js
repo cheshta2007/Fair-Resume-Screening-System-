@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Upload, CheckCircle, AlertCircle, FileText, LayoutDashboard, LogOut } from 'lucide-react';
+import { Upload, CheckCircle, AlertCircle, FileText, LayoutDashboard, LogOut, GraduationCap } from 'lucide-react';
+import SkillTest from '../components/candidate/SkillTest';
 
 const CandidateDashboard = () => {
   const [resume, setResume] = useState(null);
@@ -9,6 +10,7 @@ const CandidateDashboard = () => {
   const [selectedJob, setSelectedJob] = useState('');
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState(null);
+  const [showTest, setShowTest] = useState(false);
   const { user, logout } = useAuth();
 
   useEffect(() => {
@@ -142,6 +144,30 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || '';
                     </ul>
                   </div>
                 </div>
+
+                {/* Skill Test Toggle */}
+                {!showTest ? (
+                  <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 rounded-xl shadow-lg text-white flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                        <GraduationCap /> Boost Your Profile
+                      </h3>
+                      <p className="text-blue-100">Take a quick skill-based test to verify your expertise and get a "Verified" badge.</p>
+                    </div>
+                    <button 
+                      onClick={() => setShowTest(true)}
+                      className="bg-white text-blue-700 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition shadow-md"
+                    >
+                      Start Skill Test
+                    </button>
+                  </div>
+                ) : (
+                  <SkillTest onComplete={async (score) => {
+                    await axios.put(`${API_BASE_URL}/api/resumes/test-score`, { score });
+                    setShowTest(false);
+                    fetchMyResume();
+                  }} />
+                )}
               </>
             )}
           </div>

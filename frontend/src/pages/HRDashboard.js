@@ -1,12 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Users, Briefcase, Filter, Search } from 'lucide-react';
+import { LogOut, Users, Briefcase, Filter, Search, CheckCircle2, Copy } from 'lucide-react';
 
 const HRDashboard = () => {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedResumes, setSelectedResumes] = useState([]);
   const { logout } = useAuth();
+
+  const toggleComparison = (id) => {
+    if (selectedResumes.includes(id)) {
+      setSelectedResumes(selectedResumes.filter(rid => rid !== id));
+    } else {
+      if (selectedResumes.length < 2) setSelectedResumes([...selectedResumes, id]);
+      else alert("You can only compare 2 candidates at a time.");
+    }
+  };
+
+  const comparedData = resumes.filter(r => selectedResumes.includes(r._id));
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
@@ -67,9 +79,41 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || '';
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6">
+            {/* Comparison Panel */}
+            {selectedResumes.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-bold text-blue-800 flex items-center gap-2">
+                    <Copy size={20} /> Candidate Comparison ({selectedResumes.length}/2)
+                  </h3>
+                  <button onClick={() => setSelectedResumes([])} className="text-blue-600 text-sm font-bold hover:underline">Clear Selection</button>
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  {comparedData.map((r, i) => (
+                    <div key={r._id} className="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
+                      <p className="font-bold text-gray-700 mb-2">Candidate #{i + 1}</p>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-2xl font-black text-blue-600">{r.aiScore}</span>
+                        <span className="text-xs text-gray-400 uppercase">AI Score</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {r.extractedSkills?.map(s => <span key={s} className="bg-gray-100 text-gray-600 text-[10px] px-2 py-0.5 rounded capitalize">{s}</span>)}
+                      </div>
+                      {r.insights?.testScore && (
+                        <div className="flex items-center gap-1 text-green-600 text-xs font-bold">
+                          <CheckCircle2 size={12} /> Verified Skill Test: {r.insights.testScore}%
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <table className="min-w-full bg-white rounded-xl shadow-sm overflow-hidden">
               <thead className="bg-gray-50 border-b">
                 <tr>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Select</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Anonymized Candidate</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Applied Role</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">AI Score</th>
@@ -79,9 +123,20 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || '';
               </thead>
               <tbody className="divide-y">
                 {resumes.map((resume, idx) => (
-                  <tr key={resume._id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 font-semibold text-gray-700">Candidate #{idx + 1001}</td>
-                    <td className="px-6 py-4 text-gray-600">{resume.jobId?.title || 'Unknown Role'}</td>
+                  <tr key={resume._id} className={`hover:bg-gray-50 transition ${selectedResumes.includes(resume._id) ? 'bg-blue-50' : ''}`}>
+                    <td className="px-6 py-4">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedResumes.includes(resume._id)}
+                        onChange={() => toggleComparison(resume._id)}
+                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
+                    <td className="px-6 py-4 font-semibold text-gray-700 flex items-center gap-2">
+                      Candidate #{idx + 1001}
+                      {resume.insights?.testScore && <CheckCircle2 size={16} className="text-green-500" title="Verified Skill Test Completed" />}
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">{resume.jobTitle}</td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-sm font-bold ${resume.aiScore > 75 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                         {resume.aiScore}/100
@@ -94,8 +149,8 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || '';
                         ))}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <button className="text-blue-600 font-bold hover:underline">View Details</button>
+                    <td className="px-6 py-4 text-sm">
+                      <button className="text-blue-600 font-bold hover:underline mr-4">Details</button>
                     </td>
                   </tr>
                 ))}

@@ -11,13 +11,27 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (token && storedUser) {
-      setUser(JSON.parse(storedUser));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Failed to parse user from localStorage");
+      }
     }
     setLoading(false);
   }, []);
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+  // Add interceptor to include token in every request automatically
+  axios.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  }, (error) => {
+    return Promise.reject(error);
+  });
+
+  const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
   const login = async (email, password) => {
     const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });

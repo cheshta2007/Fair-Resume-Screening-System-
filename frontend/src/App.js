@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import HRDashboard from './pages/HRDashboard';
 import CandidateDashboard from './pages/CandidateDashboard';
+import Chatbot from './components/Chatbot';
 
 const ProtectedRoute = ({ children, allowedRole }) => {
   const { user } = useAuth();
@@ -38,6 +39,7 @@ function App() {
               </ProtectedRoute>
             } />
           </Routes>
+          <Chatbot />
         </div>
       </Router>
     </AuthProvider>
