@@ -20,7 +20,7 @@ const HRDashboard = () => {
 
   const comparedData = resumes.filter(r => selectedResumes.includes(r._id));
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+const API_BASE_URL = 'https://y-gold-two-66.vercel.app';
 
   useEffect(() => {
     const fetchResumes = async () => {

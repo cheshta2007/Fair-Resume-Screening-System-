@@ -18,7 +18,7 @@ const CandidateDashboard = () => {
     fetchMyResume();
   }, []);
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+const API_BASE_URL = 'https://y-gold-two-66.vercel.app';
 
   const fetchJobs = async () => {
     const res = await axios.get(`${API_BASE_URL}/api/jobs`);
@@ -37,17 +37,16 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || '';
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!file || !selectedJob) return alert('Please select a file and job role');
-    
+
     const formData = new FormData();
     formData.append('resume', file);
     formData.append('jobId', selectedJob);
 
     setUploading(true);
     try {
-      await axios.post("https://y-gold-two-66.vercel.app/upload", formData);
+      await axios.post(`${API_BASE_URL}/api/resumes/upload`, formData);
       fetchMyResume();
-      alert('Resume uploaded successfully!');
-    } catch (err) {
+      alert('Resume uploaded successfully!');    } catch (err) {
       alert('Upload failed');
     } finally {
       setUploading(false);

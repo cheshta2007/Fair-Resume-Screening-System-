@@ -12,12 +12,22 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database Connection
 const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('❌ ERROR: MONGODB_URI is not defined in environment variables.');
+  process.exit(1);
+}
+
 mongoose.connect(MONGODB_URI)
   .then(() => {
     console.log('✅ MongoDB Connected');
@@ -25,12 +35,15 @@ mongoose.connect(MONGODB_URI)
   })
   .catch(err => {
     console.error('❌ MongoDB Connection Error:', err.message);
-    console.log('⚠️ Running without database - Some features will be limited.');
+    // In production/Vercel, we want to fail if DB is not connected
+    if (process.env.VERCEL) {
+      process.exit(1);
+    }
   });
 
 // Routes
 app.get('/', (req, res) => {
-  res.send('Fair Resume Screening API is running...');
+  res.send('Fair Resume Screening API is running 🚀');
 });
 
 app.get('/api/health', (req, res) => {
@@ -52,14 +65,11 @@ app.use('/api/resumes', resumeRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 
-// Server start logic
-if (process.env.NODE_ENV !== 'production' || process.env.RENDER || !process.env.VERCEL) {
-  app.listen(PORT, '0.0.0.0', () => {
+// Server start logic (Vercel Compatible)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 }
-app.get("/", (req, res) => {
-  res.send("Backend is running 🚀");
-});
 
 module.exports = app;

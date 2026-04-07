@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
     return Promise.reject(error);
   });
 
-  const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+  const API_BASE_URL = 'https://y-gold-two-66.vercel.app';
 
   const login = async (email, password) => {
     const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
