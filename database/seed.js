@@ -7,7 +7,7 @@ dotenv.config({ path: './backend/.env' });
 
 const seedData = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/fair-resume-screening');
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to DB for seeding...');
 
     // Clear existing data
