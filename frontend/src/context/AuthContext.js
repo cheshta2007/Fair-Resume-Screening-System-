@@ -7,7 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE_URL = 'https://y-gold-two-66.vercel.app';
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://y-gold-two-66.vercel.app';
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
@@ -17,6 +17,17 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    // Intercept OAuth callback parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    const userFromUrl = urlParams.get('user');
+    
+    if (tokenFromUrl && userFromUrl) {
+      localStorage.setItem('token', tokenFromUrl);
+      localStorage.setItem('user', decodeURIComponent(userFromUrl));
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (token && storedUser) {
@@ -82,19 +93,8 @@ export const AuthProvider = ({ children }) => {
     return res.data.user;
   };
 
-  const googleLogin = async (credentialResponse) => {
-    const res = await axios.post(`${API_BASE_URL}/api/auth/google`, {
-      credential: credentialResponse.credential
-    });
-    localStorage.setItem('token', res.data.token);
-    localStorage.setItem('user', JSON.stringify(res.data.user));
-    axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
-    setUser(res.data.user);
-    return res.data.user;
-  };
-
   return (
-    <AuthContext.Provider value={{ user, login, register, googleLogin, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

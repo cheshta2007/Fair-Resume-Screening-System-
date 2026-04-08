@@ -2,13 +2,35 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const getGoogleClient = () => {
+  return new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.NODE_ENV === 'production' 
+      ? 'https://y-gold-two-66.vercel.app/api/auth/google/callback'
+      : 'http://localhost:5000/api/auth/google/callback'
+  );
+};
 
-exports.googleLogin = async (req, res) => {
+exports.googleLogin = (req, res) => {
+  const client = getGoogleClient();
+  const url = client.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['profile', 'email'],
+    prompt: 'consent'
+  });
+  res.redirect(url);
+};
+
+exports.googleCallback = async (req, res) => {
   try {
-    const { credential } = req.body;
+    const code = req.query.code;
+    const client = getGoogleClient();
+    const { tokens } = await client.getToken(code);
+    client.setCredentials(tokens);
+    
     const ticket = await client.verifyIdToken({
-      idToken: credential,
+      idToken: tokens.id_token,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
     
@@ -17,20 +39,23 @@ exports.googleLogin = async (req, res) => {
     let user = await User.findOne({ email });
     
     if (!user) {
-      // Create new user if not exists
       user = new User({
         name,
         email,
-        password: googleId, // Dummy password for OAuth users
-        role: 'candidate' // Default role
+        password: googleId,
+        role: 'candidate'
       });
       await user.save();
     }
     
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
-    res.json({ token, user: { id: user._id, name: user.name, role: user.role } });
+    
+    const frontendUrl = process.env.CLIENT_URL || "https://frontend-beige-two-nrlu80lisp.vercel.app";
+    const userStr = encodeURIComponent(JSON.stringify({ id: user._id, name: user.name, role: user.role }));
+    res.redirect(`${frontendUrl}/?token=${token}&user=${userStr}`);
   } catch (err) {
-    res.status(500).json({ message: 'Google login failed', error: err.message });
+    console.error('Google callback error:', err);
+    res.redirect(`${process.env.CLIENT_URL || "https://frontend-beige-two-nrlu80lisp.vercel.app"}/login?error=google_failed`);
   }
 };
 

@@ -4,7 +4,7 @@ const authController = require('../controllers/authController');
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
-router.post('/google', authController.googleLogin);
-router.post('/google/callback', authController.googleLogin);
+router.get('/google', authController.googleLogin);
+router.get('/google/callback', authController.googleCallback);
 
 module.exports = router;

@@ -15,7 +15,8 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({
   origin: "https://frontend-beige-two-nrlu80lisp.vercel.app",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
