@@ -2,7 +2,7 @@ const Resume = require('../models/Resume');
 const Job = require('../models/Job');
 const fs = require('fs');
 const path = require('path');
-const pdf = require('pdf-parse');
+// ✅ REMOVED: const pdf = require('pdf-parse'); ← was crashing entire server on startup
 const language = require('@google-cloud/language');
 
 // Initialize Google Cloud Language Client
@@ -107,6 +107,11 @@ exports.uploadResume = async (req, res) => {
 
     const job = await Job.findById(jobId);
     if (!job) return res.status(404).json({ message: 'Job not found' });
+
+    // ✅ FIX: Lazy-load pdf-parse INSIDE the function, not at the top of the file.
+    // This prevents it from crashing the entire server on startup in Vercel's
+    // serverless environment which lacks browser APIs (DOMMatrix, ImageData, etc.)
+    const pdf = require('pdf-parse');
 
     // 1. Read Text from PDF
     const dataBuffer = fs.readFileSync(file.path);
