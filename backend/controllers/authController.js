@@ -19,43 +19,38 @@ exports.googleLogin = (req, res) => {
     scope: ['profile', 'email'],
     prompt: 'consent'
   });
-  res.redirect(url);
+  res.json({ url }); // ✅ return URL, let frontend redirect
 };
+
 
 exports.googleCallback = async (req, res) => {
   try {
-    const code = req.query.code;
+    const { credential } = req.body; // ← token from frontend
     const client = getGoogleClient();
-    const { tokens } = await client.getToken(code);
-    client.setCredentials(tokens);
     
     const ticket = await client.verifyIdToken({
-      idToken: tokens.id_token,
+      idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
-    
+
     const { name, email, sub: googleId } = ticket.getPayload();
-    
+
     let user = await User.findOne({ email });
-    
     if (!user) {
-      user = new User({
-        name,
-        email,
-        password: googleId,
-        role: 'candidate'
-      });
+      user = new User({ name, email, password: googleId, role: 'candidate' });
       await user.save();
     }
-    
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
-    
-    const frontendUrl = process.env.CLIENT_URL || "https://frontend-beige-two-nrlu80lisp.vercel.app";
-    const userStr = encodeURIComponent(JSON.stringify({ id: user._id, name: user.name, role: user.role }));
-    res.redirect(`${frontendUrl}/?token=${token}&user=${userStr}`);
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '1d' }
+    );
+
+    res.json({ token, user: { id: user._id, name: user.name, role: user.role } });
   } catch (err) {
     console.error('Google callback error:', err);
-    res.redirect(`${process.env.CLIENT_URL || "https://frontend-beige-two-nrlu80lisp.vercel.app"}/login?error=google_failed`);
+    res.status(401).json({ message: 'Google authentication failed' });
   }
 };
 
