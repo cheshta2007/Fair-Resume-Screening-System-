@@ -12,30 +12,23 @@ const getGoogleClient = () => {
   );
 };
 
-exports.googleLogin = (req, res) => {
-  const client = getGoogleClient();
-  const url = client.generateAuthUrl({
-    access_type: 'offline',
-    scope: ['profile', 'email'],
-    prompt: 'consent'
-  });
-  res.json({ url }); // ✅ return URL, let frontend redirect
-};
 
 
+
+// REPLACE the old googleCallback with this new version
 exports.googleCallback = async (req, res) => {
   try {
-    const { credential } = req.body; // ← token from frontend
+    const { credential } = req.body; // ← only change is here, rest is similar
     const client = getGoogleClient();
-    
+
     const ticket = await client.verifyIdToken({
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const { name, email, sub: googleId } = ticket.getPayload();
-
     let user = await User.findOne({ email });
+
     if (!user) {
       user = new User({ name, email, password: googleId, role: 'candidate' });
       await user.save();

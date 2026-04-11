@@ -4,8 +4,7 @@ const authController = require('../controllers/authController');
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
-// Change GET to POST for callback
-router.post('/google/callback', authController.googleCallback); // ← POST now
-router.get('/google', authController.googleLogin); // can keep or remove
+router.post('/google/callback', authController.googleCallback); // ← POST, not GET
+// Remove: router.get('/google', authController.googleLogin)
 
 module.exports = router;
